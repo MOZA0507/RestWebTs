@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 
-const todos = [
-  {id: 1, text: 'Get Milk', createdAt: new Date()},
-  {id: 2, text: 'Get Meat', createdAt: new Date()},
-  {id: 3, text: 'Buy Fruits', createdAt: new Date()},
+let todos = [
+  {id: 1, text: 'Get Milk', completedAt: new Date()},
+  {id: 2, text: 'Get Meat', completedAt: null},
+  {id: 3, text: 'Buy Fruits', completedAt: new Date()},
 ]
 
 
@@ -23,4 +23,48 @@ export class TodosController {
       ? res.json(todo)
       : res.status(404).json({error: `Todo with id ${id} not found`});
   };
+
+  public createTodo = (req: Request, res: Response) => {
+    const {text} = req.body;
+    if (text.length <= 0) {
+      return res.status(400).json({error: 'Invalid text provided'});
+    }
+
+    const newTodo = {
+      id: todos.length + 1,
+      text: text,
+      completedAt: new Date()
+    };
+    todos.push(newTodo);
+    res.json(newTodo);
+  };
+
+  public updateTodo = (req:Request, res: Response) => {
+    const id = + req.params.id;
+    if (isNaN(id)) return res.status(400).json({error:'ID argument is not a number'});
+    
+    const todo = todos.find(todo => todo.id === id);
+    if (!todo) return res.status(404).json({error:`Todo with id: ${id} does not exist`});
+
+    const {text, completedAt} = req.body;
+
+    todo.text = text || todo.text;
+    (completedAt === 'null')
+      ? todo.completedAt = null
+      : todo.completedAt = new Date(completedAt || todo.completedAt);
+    res.json(todo);
+
+  };
+
+  public deleteTodo = (req: Request, res: Response) => {
+    const id = + req.params.id;
+
+    const todo = todos.find(todo => todo.id === id);
+    if (!todo) return res.status(404).json({error:`Todo with id: ${id} does not exist`});
+
+    todos = todos.filter(t => t.id !== id );
+    res.json(todo);
+  
+  };
+
 }
